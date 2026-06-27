@@ -1,0 +1,67 @@
+import json
+import os
+import sys
+
+def error(msg):
+    print(f"::error::{msg}")
+    sys.exit(1)
+
+def main(path):
+    if not os.path.exists(path):
+        error(f"Metadata file not found: {path}")
+
+    try:
+        with open(path, "r") as f:
+            data = json.load(f)
+    except Exception as e:
+        error(f"Failed to parse JSON in {path}: {e}")
+
+    if not isinstance(data, dict):
+        error("Top-level JSON must be an object mapping package names.")
+
+    lines = []
+
+    for key, meta in data.items():
+        if not isinstance(meta, dict):
+            error(f"{key} must be an object.")
+
+        upper = key.upper()
+
+        if "version" not in meta:
+            error(f"{key} missing required field: version")
+
+        version = meta["version"]
+        lines.append(f"{upper}_VERSION={version}")
+
+        if "source" in meta:
+            src = meta["source"]
+            if not isinstance(src, dict):
+                error(f"{key}.source must be an object.")
+
+            url = src.get("url_pattern") or src.get("url")
+            if url:
+                url = url.replace("{version}", version)
+                lines.append(f"{upper}_SOURCE={url}")
+
+            tag = src.get("tag_pattern") or src.get("tag")
+            if tag:
+                tag = tag.replace("{version}", version)
+                lines.append(f"{upper}_TAG={tag}")
+
+        if "release" in meta:
+            rel = meta["release"]
+            if not isinstance(rel, dict):
+                error(f"{key}.release must be an object.")
+
+            url = rel.get("url_pattern")
+            if url:
+                url = url.replace("{version}", version)
+                lines.append(f"{upper}_RELEASE={url}")
+
+    out = "\n".join(lines)
+    print("Generated arguments:")
+    print(out)
+    with open(os.environ["GITHUB_OUTPUT"], "a") as gh:
+        gh.write("build-args<<EOF\n")
+        gh.write(out + "\n")
+        gh.write("EOF\n")

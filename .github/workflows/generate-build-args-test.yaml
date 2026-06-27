@@ -1,0 +1,82 @@
+name: Test generate-build-args action
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - generate-build-args/**
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create test JSON
+        run: |
+          cat > test.json <<'EOF'
+          {
+            "tzdb": {
+              "version": "2026b",
+              "purl": "pkg:generic/tzdb",
+              "source": {
+                "url_pattern": "https://data.iana.org/time-zones/releases/tzdb-{version}.tar.lz"
+              }
+            },
+
+            "glibc": {
+              "version": "2.42",
+              "purl": "pkg:generic/glibc",
+              "source": {
+                "url": "https://sourceware.org/git/glibc.git",
+                "tag_pattern": "glibc-{version}"
+              }
+            },
+
+            "caddy": {
+              "version": "2.10.2",
+              "purl": "pkg:generic/caddy",
+              "release": {
+                "url_pattern": "https://github.com/caddyserver/caddy/releases/download/v{version}/caddy_{version}_linux_amd64.tar.gz"
+              }
+            }
+          }
+          EOF
+
+      - name: Create expected output
+        run: |
+          cat > expected.txt <<'EOF'
+          TZDB_VERSION=2026b
+          TZDB_SOURCE=https://data.iana.org/time-zones/releases/tzdb-2026b.tar.lz
+          GLIBC_VERSION=2.42
+          GLIBC_SOURCE=https://sourceware.org/git/glibc.git
+          GLIBC_TAG=glibc-2.42
+          CADDY_VERSION=2.10.2
+          CADDY_RELEASE=https://github.com/caddyserver/caddy/releases/download/v2.10.2/caddy_2.10.2_linux_amd64.tar.gz
+          EOF
+
+      - name: Run generate-build-args
+        id: args
+        uses: ./generate-build-args
+        with:
+          file: test.json
+
+      - name: Write actual output to file
+        run: |
+          printf "%s\n" "${{ steps.args.outputs.build-args }}" > actual.txt
+
+      - name: Diff actual vs expected
+        run: |
+          echo "Comparing actual output to expected..."
+          diff -u expected.txt actual.txt
+
+      - name: Fail if diff found
+        if: failure()
+        run: |
+          echo "::error::Output does not match expected build-args"
+          exit 1

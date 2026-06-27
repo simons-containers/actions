@@ -1,0 +1,24 @@
+name: Generate container Build Args
+description: Convert version metadata JSON into docker build-args
+
+inputs:
+  file:
+    description: Path to JSON metadata file
+    required: true
+    default: sources.json
+
+outputs:
+  build-args:
+    description: Multiline build-args for docker/build-push-action
+    value: ${{ steps.gen.outputs.build-args }}
+
+runs:
+  using: composite
+  steps:
+    - name: Generate build arguments
+      id: gen
+      shell: python
+      run: |
+        import runpy
+        mod = runpy.run_path("generate-build-args/generate.py")
+        mod["main"]("${{ inputs.file }}")
