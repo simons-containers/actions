@@ -1,0 +1,72 @@
+name: Push container image to registry
+description: Pushes a container image to a repository
+
+inputs:
+  appname:
+    required: true
+    description: Name of the primary application in the image, used to look up the version in sources.json
+  image_name:
+    required: true
+    description: Name of the image to be pushed, used to construct the full image name
+  registry:
+    required: false
+    description: Container registry hostname
+    default: ghcr.io
+  namespace:
+    required: false
+    description: Container image namespace
+    default: simons-containers
+  registry_token:
+    required: true
+    description: Token for the container registry
+  tag_latest:
+    required: false
+    description: Whether to tag the image as latest if the current branch is the default branch
+    default: false
+  input_file:
+    required: false
+    description: Path to the oci image file to be pushed
+    default: image.tar
+
+runs:
+  using: composite
+  steps:
+
+    - name: Check for sources.json
+      uses: simons-containers/actions/require-file@main
+      with:
+        file: sources.json
+
+    - name: Check for oci image file
+      uses: simons-containers/actions/require-file@main
+      with:
+        file: ${{ inputs.input_file }}
+
+    - name: Get image version from appname version
+      id: version
+      shell: bash
+      run: |
+        VERSION=$(jq -r ".${{ inputs.appname }}.version" sources.json)
+        echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+    - name: Log in to GHCR
+      shell: bash
+      run: |
+        echo "${{ inputs.registry_token }}" | skopeo login ${{ inputs.registry }} \
+          --username oauth2 \
+          --password-stdin
+
+    - name: Push oci image to registry
+      shell: bash
+      run: |
+        skopeo copy \
+          oci-archive:${{ inputs.input_file }} \
+          docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }}:${{ steps.version.outputs.version }}
+
+    - name: Push latest tag
+      if: inputs.tag_latest == 'true'
+      shell: bash
+      run: |
+        skopeo copy \
+          docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }}:${{ steps.version.outputs.version }} \
+          docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }}:latest
