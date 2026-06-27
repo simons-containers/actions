@@ -1,0 +1,101 @@
+name: Generate CycloneDX SBOM
+description: Create a CycloneDX SBOM from source JSON
+
+inputs:
+  source:
+    description: Path to source JSON
+    required: true
+    default: sources.json
+  destination:
+    description: Filename to save SBOM as
+    required: true
+    default: sbom.cdx.json
+
+runs:
+  using: composite
+  steps:
+    - name: Generate SBOM
+      shell: python
+      run: |
+        import json, os, datetime
+
+        path = "${{ inputs.source }}"
+        dest = "${{ inputs.destination }}"
+
+        reflog = os.path.join(os.environ["GITHUB_WORKSPACE"], ".git", "logs", "HEAD")
+
+        with open(reflog, "r") as f:
+            last = f.readlines()[-1]
+
+        parts = last.split()
+        ts_unix = int(parts[4])
+        ts = datetime.datetime.fromtimestamp(ts_unix, datetime.timezone.utc).isoformat()
+
+        with open(path, "r") as f:
+            meta = json.load(f)
+
+        components = []
+
+        for name, pkg in meta.items():
+            comp = {
+                "name": name,
+                "version": pkg["version"],
+                "purl": pkg["purl"],
+            }
+
+            if "type" in pkg:
+                comp["type"] = pkg["type"]
+
+            refs = []
+
+            if "source" in pkg:
+                src = pkg["source"]
+                if "url" in src:
+                    refs.append({"type": "vcs", "url": src["url"]})
+                if "url_pattern" in src:
+                    refs.append({
+                        "type": "distribution",
+                        "url": src["url_pattern"].replace("{version}", pkg["version"])
+                    })
+                if "tag_pattern" in src:
+                    tag = src["tag_pattern"].replace("{version}", pkg["version"])
+                    refs.append({
+                        "type": "distribution",
+                        "url": f"{src['url']}/tag/{tag}"
+                    })
+
+            if "release" in pkg:
+                rel = pkg["release"]
+                if "url_pattern" in rel:
+                    refs.append({
+                        "type": "distribution",
+                        "url": rel["url_pattern"].replace("{version}", pkg["version"])
+                    })
+
+            if refs:
+                comp["externalReferences"] = refs
+
+            components.append(comp)
+
+        sbom = {
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.5",
+            "version": 1,
+            "metadata": {
+                "timestamp": ts,
+                "tools": [
+                    {
+                        "vendor": "simons-containers",
+                        "name": "metadata-to-cdx",
+                        "version": "1.0.0"
+                    }
+                ]
+            },
+            "components": components
+        }
+
+        out = os.path.join(os.environ["GITHUB_WORKSPACE"], dest)
+        with open(out, "w") as f:
+            json.dump(sbom, f, indent=2)
+
+        print(out)

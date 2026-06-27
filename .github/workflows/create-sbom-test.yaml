@@ -1,0 +1,143 @@
+name: Test create-sbom action
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - create-sbom/**
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Create timestamp
+        id: ts
+        shell: python
+        run: |
+          import os, datetime
+          reflog = os.path.join(os.environ["GITHUB_WORKSPACE"], ".git", "logs", "HEAD")
+          with open(reflog, "r") as f:
+            last = f.readlines()[-1]
+          parts = last.split()
+          ts_unix = int(parts[4])
+          ts = datetime.datetime.fromtimestamp(ts_unix, datetime.timezone.utc).isoformat()
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"value={ts}\n")
+
+      - name: Create fixture sources.json
+        run: |
+          cat > sources.json <<EOF
+          {
+            "tzdb": {
+              "version": "2026b",
+              "purl": "pkg:generic/tzdb",
+              "source": {
+                "url_pattern": "https://data.iana.org/time-zones/releases/tzdb-{version}.tar.lz"
+              }
+            },
+            "glibc": {
+              "version": "2.42",
+              "purl": "pkg:generic/glibc",
+              "source": {
+                "url": "https://sourceware.org/git/glibc.git",
+                "tag_pattern": "glibc-{version}"
+              }
+            },
+            "caddy": {
+              "type": "application",
+              "version": "2.10.2",
+              "purl": "pkg:generic/caddy",
+              "release": {
+                "url_pattern": "https://github.com/caddyserver/caddy/releases/download/v{version}/caddy_{version}_linux_amd64.tar.gz"
+              }
+            }
+          }
+          EOF
+
+      - name: Create expected sbom
+        run: |
+          cat > expected.json <<EOF
+          {
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.5",
+            "version": 1,
+            "metadata": {
+              "timestamp": "${{ steps.ts.outputs.value }}",
+              "tools": [
+                {
+                  "vendor": "simons-containers",
+                  "name": "metadata-to-cdx",
+                  "version": "1.0.0"
+                }
+              ]
+            },
+            "components": [
+              {
+                "name": "tzdb",
+                "version": "2026b",
+                "purl": "pkg:generic/tzdb",
+                "externalReferences": [
+                  {
+                    "type": "distribution",
+                    "url": "https://data.iana.org/time-zones/releases/tzdb-2026b.tar.lz"
+                  }
+                ]
+              },
+              {
+                "name": "glibc",
+                "version": "2.42",
+                "purl": "pkg:generic/glibc",
+                "externalReferences": [
+                  {
+                    "type": "vcs",
+                    "url": "https://sourceware.org/git/glibc.git"
+                  },
+                  {
+                    "type": "distribution",
+                    "url": "https://sourceware.org/git/glibc.git/tag/glibc-2.42"
+                  }
+                ]
+              },
+              {
+                "type": "application",
+                "name": "caddy",
+                "version": "2.10.2",
+                "purl": "pkg:generic/caddy",
+                "externalReferences": [
+                  {
+                    "type": "distribution",
+                    "url": "https://github.com/caddyserver/caddy/releases/download/v2.10.2/caddy_2.10.2_linux_amd64.tar.gz"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+
+      - name: Run SBOM action
+        uses: ./create-sbom
+        with:
+          source: sources.json
+          destination: sbom.cdx.json
+
+      - name: Compare output
+        shell: python
+        run: |
+          import json
+          with open("sbom.cdx.json") as f:
+            actual = json.load(f)
+          with open("expected.json") as f:
+            expected = json.load(f)
+          if actual != expected:
+            print("Expected:")
+            print(expected)
+            print("Actual:")
+            print(actual)
+            raise SystemExit("SBOM does not match expected output")
+          print("SBOM matches expected output")
