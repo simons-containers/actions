@@ -1,0 +1,75 @@
+name: Build container image
+description: Builds a container image with generated build-args
+
+inputs:
+  containerfile:
+    required: false
+    description: The Containerfile to be built
+    default: Containerfile
+  context:
+    required: false
+    description: The build context for the container image
+    default: .
+  target:
+    required: false
+    default: ""
+  output_file:
+    required: false
+    description: Path to output file for image digest
+    default: image.tar
+  upload_artifact:
+    required: false
+    description: Whether to upload the built image as an artifact
+    default: false
+
+outputs:
+  digest:
+    description: Image digest
+    value: ${{ steps.build.outputs.digest }}
+  filename:
+    description: Path to the output file containing the built image
+    value: ${{ inputs.output_file }}
+
+runs:
+  using: composite
+  steps:
+
+    - name: Check for sources.json
+      uses: simons-containers/actions/require-file@main
+      with:
+        file: sources.json
+
+    - name: Containerfile exists
+      uses: simons-containers/actions/require-file@main
+      with:
+        file: ${{ inputs.containerfile }}
+
+    - name: Run generate-build-args
+      id: generate-args
+      uses: simons-containers/actions/generate-build-args@main
+      with:
+        file: sources.json
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v4
+
+    - name: Build container image
+      id: build
+      uses: docker/build-push-action@v7
+      with:
+        push: false
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+        context: ${{ inputs.context }}
+        file: ${{ inputs.containerfile }}
+        build-args: ${{ steps.generate-args.outputs.build-args }}
+        target: ${{ inputs.target }}
+        outputs: type=oci,dest=${{ inputs.output_file }}
+
+    - name: Upload built image as artifact
+      if: ${{ inputs.upload_artifact == 'true' }}
+      uses: actions/upload-artifact@v7
+      with:
+        name: oci-container-image
+        path: ${{ inputs.output_file }}

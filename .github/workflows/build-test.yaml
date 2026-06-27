@@ -1,0 +1,72 @@
+name: Test build action
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - build/**
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Create sources.json fixture
+        run: |
+          cat > sources.json <<'EOF'
+          {
+            "tzdb": {
+              "version": "2026b",
+              "purl": "pkg:generic/tzdb",
+              "source": {
+                "url_pattern": "https://data.iana.org/time-zones/releases/tzdb-{version}.tar.lz"
+              }
+            },
+            "glibc": {
+              "version": "2.42",
+              "purl": "pkg:generic/glibc",
+              "source": {
+                "url": "https://sourceware.org/git/glibc.git",
+                "tag_pattern": "glibc-{version}"
+              }
+            },
+            "caddy": {
+              "version": "2.10.2",
+              "purl": "pkg:generic/caddy",
+              "release": {
+                "url_pattern": "https://github.com/caddyserver/caddy/releases/download/v{version}/caddy_{version}_linux_amd64.tar.gz"
+              }
+            }
+          }
+          EOF
+
+      - name: Create Containerfile fixture
+        run: |
+          cat > Containerfile <<'EOF'
+          FROM scratch
+
+          ARG TZDB_VERSION
+          ARG TZDB_SOURCE
+
+          ARG GLIBC_VERSION
+          ARG GLIBC_SOURCE
+          ARG GLIBC_TAG
+
+          ARG CADDY_VERSION
+          ARG CADDY_RELEASE
+          EOF
+
+      - name: Run build action
+        id: build
+        uses: ./build
+        with:
+          containerfile: Containerfile
+          context: .
+          target: ""
+          upload_artifact: true
