@@ -1,0 +1,108 @@
+name: Test combine-sboms action
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - combine-sboms/**
+      - create-sbom/**
+      - build/**
+      - Dockerfile
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Create fixture sources.json
+        run: |
+          cat > sources.json <<EOF
+          {
+            "tzdb": {
+              "version": "2026b",
+              "purl": "pkg:generic/tzdb",
+              "source": {
+                "url_pattern": "https://data.iana.org/time-zones/releases/tzdb-{version}.tar.lz"
+              }
+            },
+            "glibc": {
+              "version": "2.42",
+              "purl": "pkg:generic/glibc",
+              "source": {
+                "url": "https://sourceware.org/git/glibc.git",
+                "tag_pattern": "glibc-{version}"
+              }
+            },
+            "caddy": {
+              "type": "application",
+              "version": "2.10.2",
+              "purl": "pkg:generic/caddy",
+              "release": {
+                "url_pattern": "https://github.com/caddyserver/caddy/releases/download/v{version}/caddy_{version}_linux_amd64.tar.gz"
+              }
+            }
+          }
+          EOF
+
+      - name: Create caddy fixture
+        run: |
+          wget https://github.com/caddyserver/caddy/releases/download/v2.10.2/caddy_2.10.2_linux_amd64.tar.gz
+          tar xf caddy_2.10.2_linux_amd64.tar.gz
+
+      - name: Create Containerfile fixture
+        run: |
+          cat > Containerfile <<'EOF'
+          FROM scratch
+
+          ARG TZDB_VERSION
+          ARG TZDB_SOURCE
+
+          ARG GLIBC_VERSION
+          ARG GLIBC_SOURCE
+          ARG GLIBC_TAG
+
+          ARG CADDY_VERSION
+          ARG CADDY_RELEASE
+
+          COPY ./caddy /usr/bin/caddy
+
+          EOF
+
+      - name: Run build action
+        id: build
+        uses: ./build
+        with:
+          containerfile: Containerfile
+          context: .
+          target: ""
+          upload_artifact: true
+
+      - name: Run combine-sboms
+        uses: ./combine-sboms
+        with:
+          image: image.tar
+          source: sources.json
+          output: sbom.combined.cdx.json
+
+      - name: Upload generated BOM as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: generated-sbom
+          path: /tmp/sbom.cdx.json
+
+      - name: Upload syft BOM as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: syft-sbom
+          path: /tmp/sbom.syft.cdx.json
+
+      - name: Upload combined SBOM as artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: combined-sbom
+          path: sbom.combined.cdx.json

@@ -60,6 +60,8 @@ runs:
         push: false
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        sbom: false
+        provenance: false
 
         context: ${{ inputs.context }}
         file: ${{ inputs.containerfile }}

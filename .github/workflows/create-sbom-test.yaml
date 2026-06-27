@@ -62,20 +62,24 @@ jobs:
 
       - name: Create expected sbom
         run: |
-          cat > expected.json <<EOF
+          cat > expected.json <<'EOF'
           {
+            "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
             "bomFormat": "CycloneDX",
-            "specVersion": "1.5",
+            "specVersion": "1.6",
             "version": 1,
             "metadata": {
               "timestamp": "${{ steps.ts.outputs.value }}",
-              "tools": [
-                {
-                  "vendor": "simons-containers",
-                  "name": "metadata-to-cdx",
-                  "version": "1.0.0"
-                }
-              ]
+              "tools": {
+                "components": [
+                  {
+                    "type": "file",
+                    "vendor": "simons-containers",
+                    "name": "sources.json",
+                    "version": "1.0.0"
+                  }
+                ]
+              }
             },
             "components": [
               {

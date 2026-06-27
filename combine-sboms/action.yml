@@ -1,0 +1,52 @@
+name: Combine SBOMs
+description: Combines generated SBOM and Syft SBOM into final CycloneDX SBOM
+
+inputs:
+  source:
+    description: Path to metadata JSON
+    required: false
+    default: sources.json
+  image:
+    description: OCI image tarball
+    required: false
+    default: image.tar
+  output:
+    description: Final merged SBOM filename
+    required: false
+    default: sbom-combined.cdx.json
+
+runs:
+  using: composite
+  steps:
+    - name: Run metadata SBOM
+      uses: ./create-sbom
+      with:
+        source: ${{ inputs.source }}
+        destination: /tmp/sbom.cdx.json
+
+    - name: Install Syft
+      uses: anchore/sbom-action/download-syft@v0
+
+    - name: Generate Syft SBOM
+      shell: bash
+      run: |
+        syft oci-archive:${{ inputs.image }} -o cyclonedx-json > /tmp/sbom.syft.cdx.json
+        cat /tmp/sbom.syft.cdx.json
+
+    - name: Install cyclonedx-cli
+      shell: bash
+      run: |
+        curl -sSfL https://github.com/CycloneDX/cyclonedx-cli/releases/download/v0.32.0/cyclonedx-linux-x64 -o cyclonedx
+        chmod +x cyclonedx
+
+    - name: Combine SBOMs
+      shell: bash
+      run: |
+        ./cyclonedx merge \
+          --input-files /tmp/sbom.cdx.json /tmp/sbom.syft.cdx.json \
+          --output-file ${{ inputs.output }}
+
+    - name: Print combined SBOM
+      shell: bash
+      run: |
+        cat ${{ inputs.output }}
