@@ -1,0 +1,35 @@
+name: Test require-file action
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - require-file/**
+
+permissions:
+  contents: read
+
+jobs:
+  test-passing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Create files
+        run: touch filename
+
+      - name: Passes if file exists
+        uses: ./require-file
+        with:
+          file: filename
+
+  test-failing:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Fails if file is missing
+        uses: ./require-file
+        with:
+          file: filename

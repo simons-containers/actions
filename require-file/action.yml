@@ -1,0 +1,21 @@
+name: Verify required file exists
+description: Fails if the required file is missing
+
+inputs:
+  file:
+    description: Required file
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Check required file
+      shell: python
+      run: |
+        import os
+
+        file = "${{ inputs.file }}"
+
+        if not os.path.exists(file):
+            print(f"::error::Missing required file: {file}")
+            raise SystemExit(1)
