@@ -83,6 +83,13 @@ runs:
         source: ${{ inputs.source }}
         output: sbom.combined.cdx.json
 
+    - name: Attest container
+      uses: actions/attest@v4
+      with:
+        subject-name: ${{ inputs.registry}}/${{ inputs.namespace }}/${{ inputs.image_name }}
+        subject-digest: ${{ steps.build.outputs.digest }}
+        push-to-registry: false
+
     - name: Run gryft scan
       uses: simons-containers/actions/gryft-scan@main
       with:
