@@ -19,7 +19,7 @@ runs:
   using: composite
   steps:
     - name: Run metadata SBOM
-      uses: ./create-sbom
+      uses: simons-containers/actions/create-sbom@main
       with:
         source: ${{ inputs.source }}
         destination: /tmp/sbom.cdx.json
