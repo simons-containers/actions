@@ -31,7 +31,6 @@ runs:
       shell: bash
       run: |
         syft oci-archive:${{ inputs.image }} -o cyclonedx-json > /tmp/sbom.syft.cdx.json
-        cat /tmp/sbom.syft.cdx.json
 
     - name: Install cyclonedx-cli
       shell: bash
@@ -44,9 +43,11 @@ runs:
       run: |
         ./cyclonedx merge \
           --input-files /tmp/sbom.cdx.json /tmp/sbom.syft.cdx.json \
+          --output-version v1_6 \
           --output-file ${{ inputs.output }}
 
-    - name: Print combined SBOM
-      shell: bash
-      run: |
-        cat ${{ inputs.output }}
+    - name: Upload combined SBOM as artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: combined-sbom
+        path: ${{ inputs.output }}

@@ -1,0 +1,90 @@
+name: Deploy container
+description: Build, generate SBOMs, combine them, and push an OCI image
+
+inputs:
+  appname:
+    description: Application name for push
+    required: true
+  image_name:
+    description: Image name for push
+    required: true
+  registry_token:
+    description: Token for registry push
+    required: true
+  
+  registry:
+    description: Registry hostname
+    required: false
+    default: ghcr.io
+  namespace:
+    description: Registry namespace
+    required: false
+    default: simons-containers
+  containerfile:
+    description: Path to Containerfile
+    required: false
+    default: Containerfile
+  context:
+    description: Build context directory
+    required: false
+    default: .
+  target:
+    description: Optional build target
+    required: false
+    default: ""
+  source:
+    description: Path to sources.json for metadata SBOM
+    required: false
+    default: sources.json
+  tag_latest:
+    description: Whether to tag the image as latest if the current branch is the default branch
+    required: false
+    default: false
+
+runs:
+  using: composite
+  steps:
+
+    - name: Build image
+      id: build
+      uses: simons-containers/actions/build@main
+      with:
+        containerfile: ${{ inputs.containerfile }}
+        context: ${{ inputs.context }}
+        target: ${{ inputs.target }}
+        upload_artifact: true
+
+    - name: Push image
+      id: push
+      uses: simons-containers/actions/push@main
+      with:
+        appname: ${{ inputs.appname }}
+        image_name: ${{ inputs.image_name }}
+        namespace: ${{ inputs.namespace }}
+        registry: ${{ inputs.registry }}
+        registry_token: ${{ inputs.registry_token }}
+        tag_latest: ${{ inputs.tag_latest }}
+
+    - name: Create metadata SBOM
+      uses: simons-containers/actions/create-sbom@main
+      with:
+        source: ${{ inputs.source }}
+        destination: /tmp/sbom.cdx.json
+
+    - name: Combine SBOMs
+      uses: simons-containers/actions/combine-sboms@main
+      with:
+        image: image.tar
+        source: ${{ inputs.source }}
+        output: sbom.combined.cdx.json
+
+    - name: Scan sbom
+      uses: anchore/scan-action@v7
+      with:
+        severity-cutoff: critical
+        add-cpes-if-none: true
+        output-format: json
+        fail-build: false
+        cache-db: true
+        
+        sbom: sbom.combined.cdx.json

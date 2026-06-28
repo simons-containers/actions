@@ -1,27 +1,32 @@
-name: Test combine-sboms action
+name: Test deploy action
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - combine-sboms/**
-      - create-sbom/**
       - build/**
-      - Dockerfile
+      - combine-sboms/**
+      - create-sbom/*
+      - deploy/**
+      - generate-build-args/**
+      - push/**
+      - require-file/**
 
 permissions:
   contents: read
+  packages: write
 
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Create fixture sources.json
+      - name: Create sources.json fixture
         run: |
-          cat > sources.json <<EOF
+          cat > sources.json <<'EOF'
           {
             "tzdb": {
               "version": "2026b",
@@ -39,7 +44,6 @@ jobs:
               }
             },
             "caddy": {
-              "type": "application",
               "version": "2.10.2",
               "purl": "pkg:generic/caddy",
               "release": {
@@ -73,30 +77,12 @@ jobs:
 
           EOF
 
-      - name: Run build action
-        id: build
-        uses: ./build
+      - name: Deploy image
+        uses: ./deploy
         with:
-          containerfile: Containerfile
-          context: .
-          target: ""
-          upload_artifact: true
-
-      - name: Run combine-sboms
-        uses: ./combine-sboms
-        with:
-          image: image.tar
-          source: sources.json
-          output: sbom.combined.cdx.json
-
-      - name: Upload generated BOM as artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: generated-sbom
-          path: /tmp/sbom.cdx.json
-
-      - name: Upload syft BOM as artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: syft-sbom
-          path: /tmp/sbom.syft.cdx.json
+          appname: caddy
+          image_name: actions
+          namespace: simons-containers
+          registry: ghcr.io
+          registry_token: ${{ secrets.GITHUB_TOKEN }}
+          tag_latest: ${{ github.ref_name == github.event.repository.default_branch }}
