@@ -11,6 +11,9 @@ inputs:
   registry_token:
     description: Token for registry push
     required: true
+  badges_token:
+    description: Token for badges branch
+    required: false
   
   registry:
     description: Registry hostname
@@ -70,6 +73,17 @@ runs:
         tag_latest: ${{ inputs.tag_latest }}
         suffix: ${{ inputs.suffix }}
 
+    - name: Update badges
+      uses: simons-containers/actions/badges@main
+      with:
+        version: ${{ steps.push.outputs.version }}
+        size: ${{ steps.push.outputs.size }}
+        registry: ${{ inputs.registry }}
+        namespace: ${{ inputs.namespace }}
+        image_name: ${{ inputs.image_name }}
+        registry_token: ${{ inputs.registry_token }}
+        badges_token: ${{ inputs.badges_token }}
+
     - name: Create metadata SBOM
       uses: simons-containers/actions/create-sbom@main
       with:
@@ -94,13 +108,3 @@ runs:
       uses: simons-containers/actions/gryft-scan@main
       with:
         source: sbom.combined.cdx.json
-
-    - name: Update badges
-      uses: simons-containers/actions/update-badges@main
-      with:
-        version: ${{ steps.push.outputs.version }}
-        size: ${{ steps.push.outputs.size }}
-        registry: ${{ inputs.registry }}
-        namespace: ${{ inputs.namespace }}
-        image_name: ${{ inputs.image_name }}
-        registry_token: ${{ inputs.registry_token }}

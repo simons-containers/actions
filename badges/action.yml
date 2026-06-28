@@ -1,0 +1,89 @@
+name: Update badges
+description: Fetches image tags and writes badges.json to the badges branch
+
+inputs:
+  version:
+    required: true
+    description: Current image version
+  size:
+    required: true
+    description: Human readable image size
+  registry:
+    required: false
+    description: Container registry hostname
+    default: ghcr.io
+  namespace:
+    required: false
+    description: Container image namespace
+    default: simons-containers
+  image_name:
+    required: true
+    description: Image name
+  registry_token:
+    required: true
+    description: Token for the container registry
+  badges_token:
+    required: false
+    description: Token for pushing to badges branch
+
+runs:
+  using: composite
+  steps:
+
+    - name: Get image tags
+      id: tags
+      shell: bash
+      run: |
+        echo "${{ inputs.registry_token }}" | skopeo login ${{ inputs.registry }} \
+          --username oauth2 \
+          --password-stdin
+        TAGS=$(skopeo list-tags \
+          docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }} \
+          | jq -r '[.Tags[] | select(. != "latest") | select(startswith("sha256") | not)] | sort | join(" | ")')
+        echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
+
+    - name: Write badges.json
+      shell: bash
+      run: |
+        cat > /tmp/badges.json << EOF
+        {
+          "latest": { "schemaVersion": 1, "label": "version", "message": "${{ inputs.version }}", "color": "blue" },
+          "size":   { "schemaVersion": 1, "label": "size",    "message": "${{ inputs.size }}", "color": "orange" },
+          "tags":   { "schemaVersion": 1, "label": "tags",    "message": "${{ steps.tags.outputs.tags }}", "color": "teal" }
+        }
+        EOF
+
+    - name: Create badges branch
+      uses: action-badges/create-orphan-branch@0.1.1
+      with:
+        branch-name: badges
+
+    - name: Generate current version badge
+      uses: action-badges/core@0.4.1
+      with:
+        label: Current Version
+        message: ${{ inputs.version }}
+        message-color: "brightgreen"
+        file-name: release.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
+
+    - name: Generate current size badge
+      uses: action-badges/core@0.4.1
+      with:
+        label: Current Size
+        message: ${{ inputs.size }}
+        message-color: "brightgreen"
+        file-name: size.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
+
+    - name: Generate tags list
+      uses: action-badges/core@0.4.1
+      with:
+        label: Tags
+        message: ${{ steps.tags.outputs.tags }}
+        message-color: "brightgreen"
+        file-name: tags.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"

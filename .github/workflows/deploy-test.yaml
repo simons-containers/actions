@@ -14,7 +14,7 @@ on:
       - require-file/**
 
 permissions:
-  contents: read
+  contents: write
   packages: write
   id-token: write
   attestations: write
@@ -88,5 +88,6 @@ jobs:
           namespace: simons-containers
           registry: ghcr.io
           registry_token: ${{ secrets.GITHUB_TOKEN }}
+          badges_token: ${{ secrets.GITHUB_TOKEN }}
           tag_latest: ${{ github.ref_name == github.event.repository.default_branch }}
           suffix: deploy-test
