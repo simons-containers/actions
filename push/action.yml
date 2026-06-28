@@ -32,6 +32,17 @@ inputs:
     description: Optional suffix to append to the image tag when pushing
     default: ""
 
+outputs:
+  version:
+    description: Image version
+    value: ${{ steps.version.outputs.version }}
+  size:
+    description: Human readable image size
+    value: ${{ steps.size.outputs.size }}
+  bytes:
+    description: Image size in bytes
+    value: ${{ steps.size.outputs.bytes }}
+
 runs:
   using: composite
   steps:
@@ -74,3 +85,14 @@ runs:
         skopeo copy \
           docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }}:${{ steps.version.outputs.version }} \
           docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }}:latest
+
+    - name: Get image size
+      id: size
+      shell: bash
+      run: |
+        BYTES=$(skopeo inspect \
+          docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }}:${{ steps.version.outputs.version }} \
+          | jq '[.LayersData[].Size] | add')
+        SIZE=$(echo "$BYTES" | numfmt --to=iec-i)
+        echo "bytes=$BYTES" >> "$GITHUB_OUTPUT"
+        echo "size=$SIZE" >> "$GITHUB_OUTPUT"
