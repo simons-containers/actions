@@ -1,0 +1,5 @@
+{
+  "latest": { "schemaVersion": 1, "label": "version", "message": "2.10.2", "color": "blue" },
+  "size":   { "schemaVersion": 1, "label": "size",    "message": "16Mi", "color": "orange" },
+  "tags":   { "schemaVersion": 1, "label": "tags",    "message": "2.10.2 | 2.10.2-deploy-test", "color": "teal" }
+}
