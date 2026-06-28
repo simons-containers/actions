@@ -1,0 +1,42 @@
+# Vulnerability Report
+
+- Type: {{ .source.type }}
+- Date: {{ .descriptor.timestamp }}
+{{- $total := len .matches }}
+{{- if eq $total 0 }}
+✔ Scanned for vulnerabilities [0 vulnerability matches]
+No vulnerabilities found
+{{- else }}
+✔ Scanned for vulnerabilities [{{ $total }} vulnerability matches]
+{{- $counts := coll.Dict }}
+{{- range .matches }}
+{{- $sev := .vulnerability.severity }}
+{{- $counts = coll.Merge (coll.Dict $sev (add 1 (conv.ToInt (index $counts $sev | default 0)))) $counts }}
+{{- end }}
+{{- $order := coll.Slice "Critical" "High" "Medium" "Low" }}
+{{- $circles := coll.Dict "Critical" "🔴" "High" "🟠" "Medium" "🟡" "Low" "🔵" }}
+{{- $parts := coll.Slice }}
+{{- range $sev := $order }}
+{{- if index $counts $sev }}
+{{- $parts = append (printf "%s %s: %d" (index $circles $sev) $sev (index $counts $sev)) $parts }}
+{{- end }}
+{{- end }}
+{{ join $parts "  |  " }}
+
+| Severity | Package | Version Installed | Vulnerability ID |
+|----------|---------|-------------------|------------------|
+{{- range $sev := $order }}
+{{- range $.matches }}
+{{- if eq .vulnerability.severity $sev }}
+{{- $circle := index $circles $sev | default "⚪" }}
+| {{ $circle }} {{ $sev }} | {{ .artifact.name }} | {{ .artifact.version }} | {{ .vulnerability.id }} |
+{{- end }}
+{{- end }}
+{{- end }}
+{{- range $.matches }}
+{{- $sev := .vulnerability.severity }}
+{{- if and (ne $sev "Critical") (ne $sev "High") (ne $sev "Medium") (ne $sev "Low") }}
+| ⚪ {{ $sev }} | {{ .artifact.name }} | {{ .artifact.version }} | {{ .vulnerability.id }} |
+{{- end }}
+{{- end }}
+{{- end }}

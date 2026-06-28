@@ -1,0 +1,62 @@
+name: Scan SBOM with Gryft
+description: Scans the combined SBOM with Gryft and uploads the results as an artifact
+
+inputs:
+  source:
+    description: Path to SBOM
+    required: false
+    default: sbom.cdx.json
+
+runs:
+  using: composite
+  steps:
+
+    - name: Set tool versions
+      shell: bash
+      run: |
+        echo "GOMPLATE_VERSION=v5.1.0" >> $GITHUB_ENV
+        echo "GRYPE_VERSION=v0.115.0" >> $GITHUB_ENV
+
+    - name: Cache binaries
+      id: cache-bins
+      uses: actions/cache@v6
+      with:
+        path: ~/.local/bin
+        key: bins-${{ runner.os }}-gomplate-${{ env.GOMPLATE_VERSION }}-grype-${{ env.GRYPE_VERSION }}
+
+    - name: Install gomplate
+      if: steps.cache-bins.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p ~/.local/bin
+        curl -sSL -o ~/.local/bin/gomplate \
+          https://github.com/hairyhenderson/gomplate/releases/download/${{ env.GOMPLATE_VERSION }}/gomplate_linux-amd64
+        chmod +x ~/.local/bin/gomplate
+
+    - name: Install grype
+      if: steps.cache-bins.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        curl -sSL https://raw.githubusercontent.com/anchore/grype/main/install.sh \
+          | sh -s -- -b ~/.local/bin ${{ env.GRYPE_VERSION }}
+
+    - name: Scan SBOM with Gryft
+      shell: bash
+      run: |
+        grype sbom:${{ inputs.source }} \
+          -o json \
+          > gryft-scan-results.json  
+
+    - name: Upload Gryft scan results as artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: gryft-scan-results
+        path: gryft-scan-results.json
+
+    - name: Output Gryft scan results to Github Summary with Gomplate
+      shell: bash
+      run: |
+        gomplate \
+          -f $GITHUB_ACTION_PATH/summary.tmpl \
+          --context .=gryft-scan-results.json \
+          -o $GITHUB_STEP_SUMMARY
