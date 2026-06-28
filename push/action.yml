@@ -27,6 +27,10 @@ inputs:
     required: false
     description: Path to the oci image file to be pushed
     default: image.tar
+  suffix:
+    required: false
+    description: Optional suffix to append to the image tag when pushing
+    default: ""
 
 runs:
   using: composite
@@ -61,7 +65,7 @@ runs:
       run: |
         skopeo copy \
           oci-archive:${{ inputs.input_file }} \
-          docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }}:${{ steps.version.outputs.version }}
+          docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }}:${{ steps.version.outputs.version }}${{ inputs.suffix && format('-{0}', inputs.suffix) || '' }}
 
     - name: Push latest tag
       if: inputs.tag_latest == 'true'

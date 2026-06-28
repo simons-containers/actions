@@ -40,6 +40,10 @@ inputs:
     description: Whether to tag the image as latest if the current branch is the default branch
     required: false
     default: false
+  suffix:
+    description: Optional suffix to append to the image tag when pushing
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -64,6 +68,7 @@ runs:
         registry: ${{ inputs.registry }}
         registry_token: ${{ inputs.registry_token }}
         tag_latest: ${{ inputs.tag_latest }}
+        suffix: ${{ inputs.suffix }}
 
     - name: Create metadata SBOM
       uses: simons-containers/actions/create-sbom@main

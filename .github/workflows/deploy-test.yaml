@@ -86,3 +86,4 @@ jobs:
           registry: ghcr.io
           registry_token: ${{ secrets.GITHUB_TOKEN }}
           tag_latest: ${{ github.ref_name == github.event.repository.default_branch }}
+          suffix: -deploy-test
