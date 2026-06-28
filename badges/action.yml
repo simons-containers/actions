@@ -63,7 +63,7 @@ runs:
       with:
         label: Current Version
         message: ${{ inputs.version }}
-        message-color: "brightgreen"
+        message-color: brightgreen
         file-name: release.svg
         badge-branch: badges
         github-token: "${{ inputs.badges_token }}"
@@ -73,7 +73,7 @@ runs:
       with:
         label: Current Size
         message: ${{ inputs.size }}
-        message-color: "brightgreen"
+        message-color: brightgreen
         file-name: size.svg
         badge-branch: badges
         github-token: "${{ inputs.badges_token }}"
@@ -83,7 +83,7 @@ runs:
       with:
         label: Tags
         message: ${{ steps.tags.outputs.tags }}
-        message-color: "brightgreen"
+        message-color: brightgreen
         file-name: tags.svg
         badge-branch: badges
         github-token: "${{ inputs.badges_token }}"
