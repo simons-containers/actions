@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     paths:
+      - badges/**
       - build/**
       - combine-sboms/**
       - create-sbom/*
