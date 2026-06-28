@@ -94,3 +94,13 @@ runs:
       uses: simons-containers/actions/gryft-scan@main
       with:
         source: sbom.combined.cdx.json
+
+    - name: Update badges
+      uses: simons-containers/actions/update-badges@main
+      with:
+        version: ${{ steps.push.outputs.version }}
+        size: ${{ steps.push.outputs.size }}
+        registry: ${{ inputs.registry }}
+        namespace: ${{ inputs.namespace }}
+        image_name: ${{ inputs.image_name }}
+        registry_token: ${{ inputs.registry_token }}
