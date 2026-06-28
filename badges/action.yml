@@ -42,17 +42,6 @@ runs:
           | jq -r '[.Tags[] | select(. != "latest") | select(startswith("sha256") | not)] | sort | join(" | ")')
         echo "tags=$TAGS" >> "$GITHUB_OUTPUT"
 
-    - name: Write badges.json
-      shell: bash
-      run: |
-        cat > /tmp/badges.json << EOF
-        {
-          "latest": { "schemaVersion": 1, "label": "version", "message": "${{ inputs.version }}", "color": "blue" },
-          "size":   { "schemaVersion": 1, "label": "size",    "message": "${{ inputs.size }}", "color": "orange" },
-          "tags":   { "schemaVersion": 1, "label": "tags",    "message": "${{ steps.tags.outputs.tags }}", "color": "teal" }
-        }
-        EOF
-
     - name: Create badges branch
       uses: action-badges/create-orphan-branch@0.1.1
       with:
@@ -63,7 +52,7 @@ runs:
       with:
         label: Current Version
         message: ${{ inputs.version }}
-        message-color: brightgreen
+        message-color: blue
         file-name: release.svg
         badge-branch: badges
         github-token: "${{ inputs.badges_token }}"
@@ -73,7 +62,7 @@ runs:
       with:
         label: Current Size
         message: ${{ inputs.size }}
-        message-color: brightgreen
+        message-color: blue
         file-name: size.svg
         badge-branch: badges
         github-token: "${{ inputs.badges_token }}"
@@ -83,7 +72,7 @@ runs:
       with:
         label: Tags
         message: ${{ steps.tags.outputs.tags }}
-        message-color: brightgreen
+        message-color: blue
         file-name: tags.svg
         badge-branch: badges
         github-token: "${{ inputs.badges_token }}"
