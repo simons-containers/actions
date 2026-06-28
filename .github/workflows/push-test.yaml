@@ -47,6 +47,11 @@ jobs:
           }
           EOF
 
+      - name: Create caddy fixture
+        run: |
+          wget https://github.com/caddyserver/caddy/releases/download/v2.10.2/caddy_2.10.2_linux_amd64.tar.gz
+          tar xf caddy_2.10.2_linux_amd64.tar.gz
+
       - name: Create Containerfile fixture
         run: |
           cat > Containerfile <<'EOF'
@@ -61,6 +66,9 @@ jobs:
 
           ARG CADDY_VERSION
           ARG CADDY_RELEASE
+
+          COPY ./caddy /usr/bin/caddy
+
           EOF
 
       - name: Set up Docker Buildx
