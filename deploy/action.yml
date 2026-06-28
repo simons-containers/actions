@@ -83,13 +83,7 @@ runs:
         source: ${{ inputs.source }}
         output: sbom.combined.cdx.json
 
-    - name: Scan sbom
-      uses: anchore/scan-action@v7
+    - name: Run gryft scan
+      uses: simons-containers/actions/gryft-scan@main
       with:
-        severity-cutoff: critical
-        add-cpes-if-none: true
-        output-format: json
-        fail-build: false
-        cache-db: true
-        
-        sbom: sbom.combined.cdx.json
+        source: sbom.combined.cdx.json

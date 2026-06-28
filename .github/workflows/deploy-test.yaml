@@ -9,6 +9,7 @@ on:
       - create-sbom/*
       - deploy/**
       - generate-build-args/**
+      - gryft-scan/**
       - push/**
       - require-file/**
 
