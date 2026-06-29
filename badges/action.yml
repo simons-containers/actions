@@ -50,7 +50,7 @@ runs:
     - name: Generate current version badge
       uses: action-badges/core@0.4.1
       with:
-        label: Current Version
+        label: Current Release
         message: ${{ inputs.version }}
         message-color: blue
         file-name: release.svg
@@ -60,7 +60,7 @@ runs:
     - name: Generate current size badge
       uses: action-badges/core@0.4.1
       with:
-        label: Current Size
+        label: Size
         message: ${{ inputs.size }}
         message-color: blue
         file-name: size.svg
@@ -70,7 +70,7 @@ runs:
     - name: Generate tags list
       uses: action-badges/core@0.4.1
       with:
-        label: Tags
+        label: Available Tags
         message: ${{ steps.tags.outputs.tags }}
         message-color: blue
         file-name: tags.svg

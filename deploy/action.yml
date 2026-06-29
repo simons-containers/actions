@@ -190,7 +190,7 @@ runs:
       uses: action-badges/core@0.4.1
       with:
         label: Efficiency Score
-        message: ${{ steps.dive.outputs.efficiency }}
+        message: ${{ steps.dive.outputs.efficiency }}%
         message-color: blue
         file-name: efficiency.svg
         badge-branch: badges
