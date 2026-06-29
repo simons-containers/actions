@@ -1,0 +1,70 @@
+name: Scan image with dive
+description: Scans image with dive for inefficiencies
+
+inputs:
+  image:
+    description: Image name/tag
+    required: true
+
+outputs:
+  efficiency:
+    description: Efficiency score
+    value: ${{ steps.counts.outputs.efficiency }}
+  wasted:
+    description: Inefficiency size
+    value: ${{ steps.counts.outputs.wasted }}
+
+runs:
+  using: composite
+  steps:
+
+    - name: Set tool versions
+      shell: bash
+      run: |
+        echo "DIVE_VERSION=0.13.1" >> $GITHUB_ENV
+
+    - name: Cache binaries
+      id: cache-bins
+      uses: actions/cache@v6
+      with:
+        path: ~/.local/bin
+        key: bins-${{ runner.os }}-dive-${{ env.DIVE_VERSION }}
+
+    - name: Install dive
+      if: steps.cache-bins.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        mkdir -p ~/.local/bin
+        curl -sSL \
+          https://github.com/wagoodman/dive/releases/download/v${{ env.DIVE_VERSION }}/dive_${{ env.DIVE_VERSION }}_linux_amd64.tar.gz \
+          | tar xzf -
+        mv dive ~/.local/bin/dive
+        chmod +x ~/.local/bin/dive
+
+    - name: Scan image with dive
+      shell: bash
+      run: |
+        dive --ci --highestWastedBytes 0 \
+          --json /tmp/dive-scan.json \
+          ${{ inputs.image }}
+
+    - name: Upload dive scan results as artifact
+      uses: actions/upload-artifact@v7
+      with:
+        name: dive-scan-results
+        path: /tmp/dive-scan.json
+
+    - name: Output dive results
+      id: counts
+      shell: bash
+      run: |
+        json="/tmp/dive-scan.json"
+
+        wasted=$(jq '.image.inefficientBytes' "$json")
+        score=$(jq '.image.efficiencyScore' "$json")
+
+        pct=$(printf "%.0f" "$(echo "$score * 100" | bc -l)")
+        human=$(numfmt --to=iec "$wasted")
+
+        echo "wasted=$human" >> "$GITHUB_OUTPUT"
+        echo "efficiency=$pct" >> "$GITHUB_OUTPUT"

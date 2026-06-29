@@ -1,0 +1,23 @@
+name: Test dive-scan action
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - dive-scan/**
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Run dive scan
+        uses: ./dive-scan
+        with:
+          image: ghcr.io/simons-containers/actions:2.10.2

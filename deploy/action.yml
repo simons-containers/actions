@@ -169,3 +169,29 @@ runs:
         file-name: unknown.svg
         badge-branch: badges
         github-token: "${{ inputs.badges_token }}"
+
+    - name: Run dive scan
+      id: dive
+      uses: simons-containers/actions/dive-scan@main
+      with:
+        image: ${{ inputs.registry}}/${{ inputs.namespace }}/${{ inputs.image_name }}:${{ steps.push.outputs.version }}
+
+    - name: Badge - Dive wasted size
+      uses: action-badges/core@0.4.1
+      with:
+        label: Wasted Size
+        message: ${{ steps.dive.outputs.wasted }}
+        message-color: blue
+        file-name: wasted.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
+
+    - name: Badge - Dive efficiency score
+      uses: action-badges/core@0.4.1
+      with:
+        label: Efficiency Score
+        message: ${{ steps.dive.outputs.efficiency }}
+        message-color: blue
+        file-name: efficiency.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
