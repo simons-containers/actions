@@ -104,7 +104,7 @@ runs:
         subject-digest: ${{ steps.build.outputs.digest }}
         push-to-registry: false
 
-    - name: Run gryft scan
-      uses: simons-containers/actions/gryft-scan@main
+    - name: Run Grype scan
+      uses: simons-containers/actions/grype-scan@main
       with:
         source: sbom.combined.cdx.json

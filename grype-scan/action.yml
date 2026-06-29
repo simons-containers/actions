@@ -1,5 +1,5 @@
-name: Scan SBOM with Gryft
-description: Scans the combined SBOM with Gryft and uploads the results as an artifact
+name: Scan SBOM with Grype
+description: Scans the combined SBOM with Grype and uploads the results as an artifact
 
 inputs:
   source:
@@ -40,23 +40,23 @@ runs:
         curl -sSL https://raw.githubusercontent.com/anchore/grype/main/install.sh \
           | sh -s -- -b ~/.local/bin ${{ env.GRYPE_VERSION }}
 
-    - name: Scan SBOM with Gryft
+    - name: Scan SBOM with Grype 
       shell: bash
       run: |
         grype sbom:${{ inputs.source }} \
           -o json \
-          > gryft-scan-results.json  
+          > grype-scan-results.json  
 
-    - name: Upload Gryft scan results as artifact
+    - name: Upload Grype scan results as artifact
       uses: actions/upload-artifact@v7
       with:
-        name: gryft-scan-results
-        path: gryft-scan-results.json
+        name: grype-scan-results
+        path: grype-scan-results.json
 
-    - name: Output Gryft scan results to Github Summary with Gomplate
+    - name: Output Grype scan results to Github Summary with Gomplate
       shell: bash
       run: |
         gomplate \
           -f $GITHUB_ACTION_PATH/summary.tmpl \
-          --context .=gryft-scan-results.json \
+          --context .=grype-scan-results.json \
           -o $GITHUB_STEP_SUMMARY

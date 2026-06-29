@@ -10,7 +10,7 @@ on:
       - create-sbom/*
       - deploy/**
       - generate-build-args/**
-      - gryft-scan/**
+      - grype-scan/**
       - push/**
       - require-file/**
 

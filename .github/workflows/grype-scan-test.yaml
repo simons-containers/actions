@@ -1,10 +1,10 @@
-name: Test gryft-scan action
+name: Test grype-scan action
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - gryft-scan/**
+      - grype-scan/**
 
 permissions:
   contents: read
@@ -6939,7 +6939,7 @@ jobs:
             }
           EOF
 
-      - name: Run gryft scan
-        uses: ./gryft-scan
+      - name: Run grype scan
+        uses: ./grype-scan
         with:
           source: test.sbom.json
