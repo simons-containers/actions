@@ -11,6 +11,7 @@ on:
       - deploy/**
       - generate-build-args/**
       - grype-scan/**
+      - dive-scan/**
       - push/**
       - require-file/**
 
