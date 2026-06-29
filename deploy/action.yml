@@ -105,6 +105,67 @@ runs:
         push-to-registry: false
 
     - name: Run Grype scan
+      id: grype_scan
       uses: simons-containers/actions/grype-scan@main
       with:
         source: sbom.combined.cdx.json
+
+    - name: Badge - Critical vulnerabilities
+      uses: action-badges/core@0.4.1
+      with:
+        label: Critical
+        message: ${{ steps.grype_scan.outputs.critical }}
+        message-color: red
+        file-name: critical.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
+
+    - name: Badge - High vulnerabilities
+      uses: action-badges/core@0.4.1
+      with:
+        label: High
+        message: ${{ steps.grype_scan.outputs.high }}
+        message-color: orange
+        file-name: high.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
+
+    - name: Badge - Medium vulnerabilities
+      uses: action-badges/core@0.4.1
+      with:
+        label: Medium
+        message: ${{ steps.grype_scan.outputs.medium }}
+        message-color: yellow
+        file-name: medium.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
+
+    - name: Badge - Low vulnerabilities
+      uses: action-badges/core@0.4.1
+      with:
+        label: Low
+        message: ${{ steps.grype_scan.outputs.low }}
+        message-color: blue
+        file-name: low.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
+
+    - name: Badge - Negligible vulnerabilities
+      uses: action-badges/core@0.4.1
+      with:
+        label: Negligible
+        message: ${{ steps.grype_scan.outputs.negligible }}
+        message-color: lightgrey
+        file-name: negligible.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
+
+    - name: Badge - Unknown vulnerabilities
+      uses: action-badges/core@0.4.1
+      with:
+        label: Unknown
+        message: ${{ steps.grype_scan.outputs.unknown }}
+        message-color: lightgrey
+        file-name: unknown.svg
+        badge-branch: badges
+        github-token: "${{ inputs.badges_token }}"
