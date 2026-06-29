@@ -102,6 +102,7 @@ runs:
       with:
         subject-name: ${{ inputs.registry}}/${{ inputs.namespace }}/${{ inputs.image_name }}
         subject-digest: ${{ steps.build.outputs.digest }}
+        sbom-path: sbom.combined.cdx.json
         push-to-registry: false
 
     - name: Run Grype scan
