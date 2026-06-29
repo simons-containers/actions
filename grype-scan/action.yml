@@ -7,6 +7,26 @@ inputs:
     required: false
     default: sbom.cdx.json
 
+outputs:
+  critical:
+    description: Number of critical vulnerabilities
+    value: ${{ steps.counts.outputs.critical }}
+  high:
+    description: Number of high vulnerabilities
+    value: ${{ steps.counts.outputs.high }}
+  medium:
+    description: Number of medium vulnerabilities
+    value: ${{ steps.counts.outputs.medium }}
+  low:
+    description: Number of low vulnerabilities
+    value: ${{ steps.counts.outputs.low }}
+  negligible:
+    description: Number of negligible vulnerabilities
+    value: ${{ steps.counts.outputs.negligible }}
+  unknown:
+    description: Number of unknown vulnerabilities
+    value: ${{ steps.counts.outputs.unknown }}
+
 runs:
   using: composite
   steps:
@@ -46,6 +66,17 @@ runs:
         grype sbom:${{ inputs.source }} \
           -o json \
           > grype-scan-results.json  
+
+    - name: Count vulnerabilities by severity
+      id: counts
+      shell: bash
+      run: |
+        for severity in critical high medium low negligible unknown; do
+          count=$(jq --arg s "${severity^}" \
+            '[.matches[] | select(.vulnerability.severity == $s)] | length' \
+            grype-scan-results.json)
+          echo "${severity}=${count}" >> $GITHUB_OUTPUT
+        done
 
     - name: Upload Grype scan results as artifact
       uses: actions/upload-artifact@v7
