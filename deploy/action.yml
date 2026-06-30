@@ -96,6 +96,7 @@ runs:
         image: image.tar
         source: ${{ inputs.source }}
         output: sbom.combined.cdx.json
+        target: ${{ inputs.target }}
 
     - name: Attest container
       uses: actions/attest@v4
