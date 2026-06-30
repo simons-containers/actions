@@ -73,5 +73,5 @@ runs:
       if: ${{ inputs.upload_artifact == 'true' }}
       uses: actions/upload-artifact@v7
       with:
-        name: oci-container-image
+        name: oci-container-image${{ inputs.target && format('-{0}', inputs.target) || '' }}
         path: ${{ inputs.output_file }}
