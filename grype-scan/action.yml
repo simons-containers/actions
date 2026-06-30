@@ -6,6 +6,10 @@ inputs:
     description: Path to SBOM
     required: false
     default: sbom.cdx.json
+  target:
+    description: Image target
+    required: false
+    default: ""
 
 outputs:
   critical:
@@ -81,7 +85,7 @@ runs:
     - name: Upload Grype scan results as artifact
       uses: actions/upload-artifact@v7
       with:
-        name: grype-scan-results
+        name: grype-scan-results${{ inputs.target && format('-{0}', inputs.target) || '' }}
         path: grype-scan-results.json
 
     - name: Output Grype scan results to Github Summary with Gomplate
