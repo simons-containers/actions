@@ -111,6 +111,8 @@ runs:
       uses: simons-containers/actions/grype-scan@main
       with:
         source: sbom.combined.cdx.json
+        target: ${{ inputs.target }}
+
 
     - name: Badge - Critical vulnerabilities
       uses: action-badges/core@0.4.1
@@ -177,6 +179,7 @@ runs:
       uses: simons-containers/actions/dive-scan@main
       with:
         image: ${{ inputs.registry}}/${{ inputs.namespace }}/${{ inputs.image_name }}:${{ steps.push.outputs.version }}
+        target: ${{ inputs.target }}
 
     - name: Badge - Dive wasted size
       uses: action-badges/core@0.4.1
