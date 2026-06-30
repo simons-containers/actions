@@ -13,6 +13,10 @@ outputs:
   wasted:
     description: Inefficiency size
     value: ${{ steps.counts.outputs.wasted }}
+  target:
+    description: Image target
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -51,7 +55,7 @@ runs:
     - name: Upload dive scan results as artifact
       uses: actions/upload-artifact@v7
       with:
-        name: dive-scan-results
+        name: dive-scan-results${{ inputs.target && format('-{0}', inputs.target) || '' }}
         path: /tmp/dive-scan.json
 
     - name: Output dive results
