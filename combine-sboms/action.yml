@@ -14,6 +14,10 @@ inputs:
     description: Final merged SBOM filename
     required: false
     default: sbom-combined.cdx.json
+  target:
+    description: Image target
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -49,5 +53,5 @@ runs:
     - name: Upload combined SBOM as artifact
       uses: actions/upload-artifact@v7
       with:
-        name: combined-sbom
+        name: combined-sbom${{ inputs.target && format('-{0}', inputs.target) || '' }}
         path: ${{ inputs.output }}
