@@ -5,7 +5,11 @@ inputs:
   image:
     description: Image name/tag
     required: true
-
+  target:
+    description: Image target
+    required: false
+    default: ""
+    
 outputs:
   efficiency:
     description: Efficiency score
@@ -13,10 +17,6 @@ outputs:
   wasted:
     description: Inefficiency size
     value: ${{ steps.counts.outputs.wasted }}
-  target:
-    description: Image target
-    required: false
-    default: ""
 
 runs:
   using: composite
