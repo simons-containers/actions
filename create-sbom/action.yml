@@ -40,8 +40,13 @@ runs:
             comp = {
                 "name": name,
                 "version": pkg["version"],
-                "purl": pkg["purl"],
             }
+
+            if "purl" in pkg:
+                comp["purl"] = pkg["purl"]
+
+            if "cpe" in pkg:
+                comp["cpe"] = pkg["cpe"]
 
             if "type" in pkg:
                 comp["type"] = pkg["type"]
