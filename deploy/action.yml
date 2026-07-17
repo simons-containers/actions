@@ -185,6 +185,7 @@ runs:
       with:
         image: ${{ inputs.registry}}/${{ inputs.namespace }}/${{ inputs.image_name }}:${{ steps.push.outputs.version }}
         target: ${{ inputs.target }}
+        registry_token: ${{ inputs.registry_token }}
 
     - name: Badge - Dive wasted size
       uses: action-badges/core@0.4.1
