@@ -21,3 +21,4 @@ jobs:
         uses: ./dive-scan
         with:
           image: ghcr.io/simons-containers/actions:2.10.2
+          registry_token: ${{ secrets.GITHUB_TOKEN }}
