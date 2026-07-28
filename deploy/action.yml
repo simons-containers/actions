@@ -187,6 +187,7 @@ runs:
         github-token: "${{ inputs.badges_token }}"
 
     - name: Run dive scan
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       id: dive
       uses: simons-containers/actions/dive-scan@main
       with:
