@@ -87,6 +87,7 @@ runs:
           docker://${{ inputs.registry }}/${{ inputs.namespace }}/${{ inputs.image_name }}:latest
 
     - name: Get image size
+      if: inputs.tag_latest == 'true'
       id: size
       shell: bash
       run: |
