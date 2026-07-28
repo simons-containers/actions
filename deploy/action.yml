@@ -78,6 +78,7 @@ runs:
         suffix: ${{ inputs.suffix }}
 
     - name: Update badges
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       uses: simons-containers/actions/badges@main
       with:
         version: ${{ steps.push.outputs.version }}
@@ -120,6 +121,7 @@ runs:
 
 
     - name: Badge - Critical vulnerabilities
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       uses: action-badges/core@0.4.1
       with:
         label: Critical
@@ -130,6 +132,7 @@ runs:
         github-token: "${{ inputs.badges_token }}"
 
     - name: Badge - High vulnerabilities
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       uses: action-badges/core@0.4.1
       with:
         label: High
@@ -140,6 +143,7 @@ runs:
         github-token: "${{ inputs.badges_token }}"
 
     - name: Badge - Medium vulnerabilities
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       uses: action-badges/core@0.4.1
       with:
         label: Medium
@@ -150,6 +154,7 @@ runs:
         github-token: "${{ inputs.badges_token }}"
 
     - name: Badge - Low vulnerabilities
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       uses: action-badges/core@0.4.1
       with:
         label: Low
@@ -160,6 +165,7 @@ runs:
         github-token: "${{ inputs.badges_token }}"
 
     - name: Badge - Negligible vulnerabilities
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       uses: action-badges/core@0.4.1
       with:
         label: Negligible
@@ -170,6 +176,7 @@ runs:
         github-token: "${{ inputs.badges_token }}"
 
     - name: Badge - Unknown vulnerabilities
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       uses: action-badges/core@0.4.1
       with:
         label: Unknown
@@ -188,6 +195,7 @@ runs:
         registry_token: ${{ inputs.registry_token }}
 
     - name: Badge - Dive wasted size
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       uses: action-badges/core@0.4.1
       with:
         label: Wasted Size
@@ -198,6 +206,7 @@ runs:
         github-token: "${{ inputs.badges_token }}"
 
     - name: Badge - Dive efficiency score
+      if: inputs.tag_latest == 'true' && inputs.suffix == ''
       uses: action-badges/core@0.4.1
       with:
         label: Efficiency Score
