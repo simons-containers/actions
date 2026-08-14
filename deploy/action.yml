@@ -51,6 +51,10 @@ inputs:
     description: Attest the image
     required: false
     default: true
+  upload_oci_artifact:
+    description: Upload the OCI image as an artifact
+    required: false
+    default: true
 
 runs:
   using: composite
@@ -63,8 +67,8 @@ runs:
         containerfile: ${{ inputs.containerfile }}
         context: ${{ inputs.context }}
         target: ${{ inputs.target }}
-        upload_artifact: true
-
+        upload_artifact: ${{ inputs.upload_oci_artifact }}
+        
     - name: Push image
       id: push
       uses: simons-containers/actions/push@main
